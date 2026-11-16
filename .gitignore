@@ -27,3 +27,6 @@ kobbi-mobile/ios/build/
 *.tmp
 *.temp
 .env.local
+
+# Web prototype
+kobbi-design/

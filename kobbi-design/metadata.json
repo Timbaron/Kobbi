@@ -1,6 +1,0 @@
-{
-  "name": "Kobbi — Personal Finance & Budget Tracker",
-  "description": "Every kobo counts. Track income, manage expenses, build budgets, and monitor savings goals.",
-  "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
-}
