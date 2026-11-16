@@ -88,12 +88,37 @@ export function formatGroupDateHeader(
 
 export function addFrequencyToDate(dateOnlyISO: string, frequency: RecurrenceFrequency): string {
   const [y, m, d] = dateOnlyISO.slice(0, 10).split('-').map((n) => parseInt(n, 10));
+
+  if (frequency === 'daily') {
+    const dt = new Date(y, m - 1, d);
+    dt.setDate(dt.getDate() + 1);
+    return toDateOnlyISO(dt);
+  } else if (frequency === 'weekly') {
+    const dt = new Date(y, m - 1, d);
+    dt.setDate(dt.getDate() + 7);
+    return toDateOnlyISO(dt);
+  } else if (frequency === 'biweekly') {
+    const dt = new Date(y, m - 1, d);
+    dt.setDate(dt.getDate() + 14);
+    return toDateOnlyISO(dt);
+  } else if (frequency === 'monthly') {
+    let targetYear = y;
+    let targetMonth = m + 1;
+    if (targetMonth > 12) {
+      targetMonth = 1;
+      targetYear++;
+    }
+    const maxDays = new Date(targetYear, targetMonth, 0).getDate();
+    const targetDay = Math.min(d, maxDays);
+    return `${targetYear}-${String(targetMonth).padStart(2, '0')}-${String(targetDay).padStart(2, '0')}`;
+  } else if (frequency === 'yearly') {
+    const targetYear = y + 1;
+    const maxDays = new Date(targetYear, m, 0).getDate();
+    const targetDay = Math.min(d, maxDays);
+    return `${targetYear}-${String(m).padStart(2, '0')}-${String(targetDay).padStart(2, '0')}`;
+  }
+
   const dt = new Date(y, m - 1, d);
-  if (frequency === 'daily') dt.setDate(dt.getDate() + 1);
-  else if (frequency === 'weekly') dt.setDate(dt.getDate() + 7);
-  else if (frequency === 'biweekly') dt.setDate(dt.getDate() + 14);
-  else if (frequency === 'monthly') dt.setMonth(dt.getMonth() + 1);
-  else if (frequency === 'yearly') dt.setFullYear(dt.getFullYear() + 1);
   return toDateOnlyISO(dt);
 }
 
