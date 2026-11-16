@@ -110,7 +110,7 @@ describe('Financial Calculation Precision & Edge Cases', () => {
 
       const accounts: Account[] = [gtbAccount, opayAccount];
       const transactions: Transaction[] = [];
-      const startTime = performance.now();
+      const startTime = Date.now();
 
       // Generate 10,000 alternating transactions:
       // 5,000 income credits of ₦1,000.00 (100,000 kobo)
@@ -156,7 +156,7 @@ describe('Financial Calculation Precision & Edge Cases', () => {
       const gtbBalance = getAccountBalanceKobo(gtbAccount, transactions);
       const opayBalance = getAccountBalanceKobo(opayAccount, transactions);
       const totalBalance = getTotalBalanceKobo(accounts, transactions);
-      const durationMs = performance.now() - startTime;
+      const durationMs = Date.now() - startTime;
 
       // GTBank balance:
       // Opening: 10,000,000
