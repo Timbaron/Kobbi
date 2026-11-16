@@ -53,7 +53,7 @@
 ## 🛠️ Project Structure
 
 ```text
-kobbi-mobile/
+Kobbi/
 ├── App.tsx                      # Root application shell & navigation dispatcher
 ├── src/
 │   ├── app/                     # App bootstrap and navigation
