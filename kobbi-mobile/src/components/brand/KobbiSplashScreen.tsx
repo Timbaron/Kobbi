@@ -1,0 +1,84 @@
+import React from 'react';
+import {
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
+import { KobbiAppIcon } from './KobbiLogo';
+import { DesignTokens } from '../../theme/tokens';
+
+interface KobbiSplashScreenProps {
+  onDismiss?: () => void;
+}
+
+export const KobbiSplashScreen: React.FC<KobbiSplashScreenProps> = ({ onDismiss }) => {
+  return (
+    <Pressable
+      onPress={onDismiss}
+      style={styles.splashContainer}
+      accessibilityRole="button"
+      accessibilityLabel="Loading Kobbi"
+    >
+      <View />
+
+      <View style={styles.centerWrap}>
+        <View style={styles.iconShadowBox}>
+          <KobbiAppIcon size={84} tone="white-on-emerald" />
+        </View>
+        <Text style={styles.wordmark}>
+          kobbi<Text style={styles.mintDot}>.</Text>
+        </Text>
+        <Text style={styles.tagline}>Every kobo counts.</Text>
+      </View>
+
+      <Text style={styles.statement}>
+        Your money. Your clarity. Your control.
+      </Text>
+    </Pressable>
+  );
+};
+
+const styles = StyleSheet.create({
+  splashContainer: {
+    ...StyleSheet.absoluteFill,
+    zIndex: 999,
+    backgroundColor: '#101828',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: DesignTokens.spacing.xxl + 20,
+    paddingHorizontal: DesignTokens.spacing.xl,
+  },
+  centerWrap: {
+    alignItems: 'center',
+  },
+  iconShadowBox: {
+    shadowColor: '#087F5B',
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.35,
+    shadowRadius: 20,
+    elevation: 12,
+  },
+  wordmark: {
+    marginTop: DesignTokens.spacing.lg,
+    fontSize: 34,
+    fontWeight: '800',
+    color: '#F8FAFC',
+    letterSpacing: -0.8,
+  },
+  mintDot: {
+    color: '#DDF5E6',
+  },
+  tagline: {
+    marginTop: DesignTokens.spacing.xs,
+    fontSize: DesignTokens.typography.sizes.section,
+    fontWeight: '600',
+    color: '#DDF5E6',
+  },
+  statement: {
+    fontSize: DesignTokens.typography.sizes.caption,
+    fontWeight: '500',
+    color: '#98A2B3',
+    letterSpacing: 0.2,
+  },
+});
