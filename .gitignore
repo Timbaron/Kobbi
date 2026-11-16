@@ -1,0 +1,29 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Android
+kobbi-mobile/android/.gradle/
+kobbi-mobile/android/app/build/
+kobbi-mobile/android/build/
+*.keystore
+!debug.keystore
+
+# iOS
+kobbi-mobile/ios/Pods/
+kobbi-mobile/ios/build/
+*.xcworkspace
+*.xcuserstate
+
+# Temporary files
+*.tmp
+*.temp
+.env.local
