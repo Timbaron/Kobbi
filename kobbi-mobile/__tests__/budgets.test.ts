@@ -1,4 +1,5 @@
-import { createBetterSqliteConnection, DatabaseConnection } from '../src/database/connection/DatabaseConnection';
+import { DatabaseConnection } from '../src/database/connection/DatabaseConnection';
+import { createBetterSqliteConnection } from './helpers/testDatabase';
 import { DatabaseManager } from '../src/database';
 import { getBudgetSummary } from '../src/utils/calculations';
 

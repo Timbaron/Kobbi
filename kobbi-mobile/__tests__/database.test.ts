@@ -1,4 +1,5 @@
-import { createBetterSqliteConnection, DatabaseConnection } from '../src/database/connection/DatabaseConnection';
+import { DatabaseConnection } from '../src/database/connection/DatabaseConnection';
+import { createBetterSqliteConnection } from './helpers/testDatabase';
 import { runMigrations } from '../src/database/migrations/migrator';
 import { seedInitialData } from '../src/database/seeds/defaultData';
 import { DatabaseManager } from '../src/database';
