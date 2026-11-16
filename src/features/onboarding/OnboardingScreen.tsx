@@ -94,7 +94,7 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }
 
   return (
     <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={[styles.container, { backgroundColor: colors.background }]}
     >
       {/* Top Header & Step Indicator */}
@@ -120,6 +120,7 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
         {step === 0 && (
@@ -498,7 +499,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: DesignTokens.spacing.lg,
-    paddingTop: DesignTokens.spacing.xl,
+    paddingTop: DesignTokens.spacing.sm,
     paddingBottom: DesignTokens.spacing.lg,
   },
   topHeader: {

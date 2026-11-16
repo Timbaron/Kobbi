@@ -77,7 +77,8 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
       statusBarTranslucent
     >
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 25}
         style={styles.keyboardContainer}
       >
         <Animated.View style={[styles.backdrop, { opacity: fadeAnim }]}>
@@ -214,6 +215,6 @@ const styles = StyleSheet.create({
   },
   scrollInner: {
     padding: DesignTokens.spacing.lg,
-    paddingBottom: 32,
+    paddingBottom: 96,
   },
 });

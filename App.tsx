@@ -6,7 +6,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Plus } from 'lucide-react-native';
 
 import { ThemeProvider, useTheme } from './src/theme/ThemeContext';
@@ -139,22 +139,31 @@ function KobbiMainApp() {
   // 1. Splash Screen & Initializing state
   if (showSplash || !dbReady || !settings) {
     return (
-      <KobbiSplashScreen
-        onDismiss={() => {
-          if (!settings) {
-            setSettings(DEFAULT_APP_SETTINGS);
-          }
-          setDbReady(true);
-          setShowSplash(false);
-        }}
-      />
+      <SafeAreaView
+        style={{ flex: 1, backgroundColor: '#101828' }}
+        edges={['top', 'bottom', 'left', 'right']}
+      >
+        <StatusBar barStyle="light-content" />
+        <KobbiSplashScreen
+          onDismiss={() => {
+            if (!settings) {
+              setSettings(DEFAULT_APP_SETTINGS);
+            }
+            setDbReady(true);
+            setShowSplash(false);
+          }}
+        />
+      </SafeAreaView>
     );
   }
 
   // 3. First-Launch Onboarding
   if (!settings.onboardingCompleted) {
     return (
-      <View style={[styles.root, { backgroundColor: colors.background }]}>
+      <SafeAreaView
+        style={[styles.root, { backgroundColor: colors.background }]}
+        edges={['top', 'bottom', 'left', 'right']}
+      >
         <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
         <ToastBanner toast={toast} onDismiss={() => setToast(null)} />
         <OnboardingScreen
@@ -164,14 +173,17 @@ function KobbiMainApp() {
             showToast('Kobbi initialized. Welcome!', 'success');
           }}
         />
-      </View>
+      </SafeAreaView>
     );
   }
 
   // 4. App Lock (PIN screen guard)
   if (isLocked) {
     return (
-      <View style={[styles.root, { backgroundColor: colors.background }]}>
+      <SafeAreaView
+        style={[styles.root, { backgroundColor: colors.background }]}
+        edges={['top', 'bottom', 'left', 'right']}
+      >
         <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
         <ToastBanner toast={toast} onDismiss={() => setToast(null)} />
         <PinLockScreen
@@ -184,18 +196,21 @@ function KobbiMainApp() {
             showToast('Biometric unlock verified', 'success');
           }}
         />
-      </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <View style={[styles.root, { backgroundColor: colors.background }]}>
+    <SafeAreaView
+      style={[styles.root, { backgroundColor: colors.surface }]}
+      edges={secondaryScreen !== null ? ['top', 'bottom', 'left', 'right'] : ['top', 'left', 'right']}
+    >
       <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
 
       <ToastBanner toast={toast} onDismiss={() => setToast(null)} />
 
       {/* Main Content Area */}
-      <View style={styles.content}>
+      <View style={[styles.content, { backgroundColor: colors.background }]}>
         {secondaryScreen === 'accounts' && (
           <AccountsScreen
             onBack={() => setSecondaryScreen(null)}
@@ -305,7 +320,7 @@ function KobbiMainApp() {
         }}
         onShowToast={showToast}
       />
-    </View>
+    </SafeAreaView>
   );
 }
 

@@ -261,8 +261,8 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'space-between',
     paddingHorizontal: DesignTokens.spacing.xl,
-    paddingTop: DesignTokens.spacing.xxl + 20,
-    paddingBottom: DesignTokens.spacing.xxl,
+    paddingTop: DesignTokens.spacing.lg,
+    paddingBottom: DesignTokens.spacing.lg,
   },
   topSection: {
     alignItems: 'center',
