@@ -32,6 +32,70 @@ export function setDatabaseConnectionForTesting(conn: DatabaseConnection | null)
 }
 
 /**
+ * Splits a multi-statement SQL script into individual executable statements,
+ * safely handling single/double quoted string literals.
+ */
+export function splitSqlStatements(sql: string): string[] {
+  const statements: string[] = [];
+  let current = '';
+  let inString = false;
+  let stringChar = '';
+
+  for (let i = 0; i < sql.length; i++) {
+    const char = sql[i];
+    if (inString) {
+      current += char;
+      if (char === stringChar) {
+        if (sql[i + 1] === stringChar) {
+          current += sql[i + 1];
+          i++;
+        } else {
+          inString = false;
+        }
+      }
+    } else {
+      if (char === "'" || char === '"' || char === '`') {
+        inString = true;
+        stringChar = char;
+        current += char;
+      } else if (char === ';') {
+        const trimmed = current.trim();
+        if (trimmed) {
+          statements.push(trimmed);
+        }
+        current = '';
+      } else {
+        current += char;
+      }
+    }
+  }
+
+  const remainder = current.trim();
+  if (remainder) {
+    statements.push(remainder);
+  }
+
+  return statements;
+}
+
+/**
+ * Standardize row extraction across different op-sqlite / SQLite driver return shapes
+ */
+export function extractRows(res: any): any[] {
+  if (!res) return [];
+  if (Array.isArray(res.rows)) return res.rows;
+  if (res.rows && Array.isArray(res.rows._array)) return res.rows._array;
+  if (res.rows && typeof res.rows.item === 'function') {
+    const list: any[] = [];
+    for (let i = 0; i < res.rows.length; i++) {
+      list.push(res.rows.item(i));
+    }
+    return list;
+  }
+  return [];
+}
+
+/**
  * Native runtime driver using @op-engineering/op-sqlite
  */
 function createOpSqliteConnection(dbName = 'kobbi.db'): DatabaseConnection {
@@ -39,22 +103,34 @@ function createOpSqliteConnection(dbName = 'kobbi.db'): DatabaseConnection {
   const { open } = require('@op-engineering/op-sqlite');
   const db = open({ name: dbName });
 
-  // Enable foreign keys & WAL mode
-  db.execute('PRAGMA foreign_keys = ON;');
-  db.execute('PRAGMA journal_mode = WAL;');
+  // Enable foreign keys & WAL mode safely
+  try {
+    if (typeof db.executeSync === 'function') {
+      db.executeSync('PRAGMA foreign_keys = ON;');
+      db.executeSync('PRAGMA journal_mode = WAL;');
+    } else {
+      db.execute('PRAGMA foreign_keys = ON;').catch(() => {});
+      db.execute('PRAGMA journal_mode = WAL;').catch(() => {});
+    }
+  } catch {
+    // Ignore pragma errors if sync execution is unsupported in environment
+  }
 
   const connection: DatabaseConnection = {
     async execute(sql: string, params: any[] = []): Promise<QueryResult> {
       const res = await db.execute(sql, params);
       return {
-        rows: res.rows?._array || res.rows || [],
-        rowsAffected: res.rowsAffected || 0,
-        insertId: res.insertId,
+        rows: extractRows(res),
+        rowsAffected: res?.rowsAffected ?? 0,
+        insertId: res?.insertId,
       };
     },
 
     async executeRaw(sql: string): Promise<void> {
-      await db.executeRaw(sql);
+      const statements = splitSqlStatements(sql);
+      for (const statement of statements) {
+        await db.execute(statement);
+      }
     },
 
     async transaction<T>(callback: (tx: DatabaseConnection) => Promise<T>): Promise<T> {
@@ -64,13 +140,16 @@ function createOpSqliteConnection(dbName = 'kobbi.db'): DatabaseConnection {
           async execute(sql: string, params: any[] = []): Promise<QueryResult> {
             const res = await tx.execute(sql, params);
             return {
-              rows: res.rows?._array || res.rows || [],
-              rowsAffected: res.rowsAffected || 0,
-              insertId: res.insertId,
+              rows: extractRows(res),
+              rowsAffected: res?.rowsAffected ?? 0,
+              insertId: res?.insertId,
             };
           },
           async executeRaw(sql: string): Promise<void> {
-            await tx.executeRaw(sql);
+            const statements = splitSqlStatements(sql);
+            for (const statement of statements) {
+              await tx.execute(statement);
+            }
           },
           async transaction<U>(_nestedCallback: (t: DatabaseConnection) => Promise<U>): Promise<U> {
             throw new Error('Nested transactions are not supported');

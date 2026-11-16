@@ -11,6 +11,7 @@ import { Plus } from 'lucide-react-native';
 
 import { ThemeProvider, useTheme } from './src/theme/ThemeContext';
 import { DatabaseManager } from './src/database';
+import { DEFAULT_APP_SETTINGS } from './src/database/seeds/defaultData';
 import { BottomNavigation } from './src/components/layout/BottomNavigation';
 import { KobbiSplashScreen } from './src/components/brand/KobbiSplashScreen';
 import { ToastBanner, ToastMessage } from './src/components/common/ToastBanner';
@@ -81,21 +82,27 @@ function KobbiMainApp() {
             setIsLocked(true);
           }
         }
-      } catch (err) {
+      } catch (err: any) {
         if (mounted) {
+          // Safeguard: fallback to default settings so user is never locked out
+          setSettings(DEFAULT_APP_SETTINGS);
           setDbReady(true);
+        }
+      } finally {
+        if (mounted) {
+          setShowSplash(false);
         }
       }
     }
 
     bootstrap();
 
-    // Splash auto dismiss timer
+    // Splash auto dismiss timeout fallback safeguard
     const splashTimer = setTimeout(() => {
       if (mounted) {
         setShowSplash(false);
       }
-    }, 750);
+    }, 1500);
 
     return () => {
       mounted = false;
@@ -129,14 +136,19 @@ function KobbiMainApp() {
     return false;
   };
 
-  // 1. Splash Screen
-  if (showSplash) {
-    return <KobbiSplashScreen onDismiss={() => setShowSplash(false)} />;
-  }
-
-  // 2. Initializing loading state
-  if (!dbReady || !settings) {
-    return <KobbiSplashScreen />;
+  // 1. Splash Screen & Initializing state
+  if (showSplash || !dbReady || !settings) {
+    return (
+      <KobbiSplashScreen
+        onDismiss={() => {
+          if (!settings) {
+            setSettings(DEFAULT_APP_SETTINGS);
+          }
+          setDbReady(true);
+          setShowSplash(false);
+        }}
+      />
+    );
   }
 
   // 3. First-Launch Onboarding

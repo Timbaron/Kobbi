@@ -1,5 +1,6 @@
 import React from 'react';
 import {
+  ActivityIndicator,
   Pressable,
   StyleSheet,
   Text,
@@ -18,7 +19,7 @@ export const KobbiSplashScreen: React.FC<KobbiSplashScreenProps> = ({ onDismiss 
       onPress={onDismiss}
       style={styles.splashContainer}
       accessibilityRole="button"
-      accessibilityLabel="Loading Kobbi"
+      accessibilityLabel="Kobbi Splash Screen"
     >
       <View />
 
@@ -30,6 +31,7 @@ export const KobbiSplashScreen: React.FC<KobbiSplashScreenProps> = ({ onDismiss 
           kobbi<Text style={styles.mintDot}>.</Text>
         </Text>
         <Text style={styles.tagline}>Every kobo counts.</Text>
+        <ActivityIndicator size="small" color="#087F5B" style={styles.loader} />
       </View>
 
       <Text style={styles.statement}>
@@ -51,6 +53,9 @@ const styles = StyleSheet.create({
   },
   centerWrap: {
     alignItems: 'center',
+  },
+  loader: {
+    marginTop: DesignTokens.spacing.lg,
   },
   iconShadowBox: {
     shadowColor: '#087F5B',
