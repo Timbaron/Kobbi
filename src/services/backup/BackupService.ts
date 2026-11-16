@@ -449,31 +449,11 @@ export class BackupService {
 
         // Restore Settings
         if (data.settings) {
-          const s = data.settings;
-          const settingsRows: [string, string][] = [
-            ['user_name', s.userName],
-            ['currency_code', s.currencyCode],
-            ['currency_symbol', s.currencySymbol],
-            ['theme', s.theme],
-            ['date_format', s.dateFormat],
-            ['hide_balances', s.hideBalances ? 'true' : 'false'],
-            ['app_lock_enabled', s.appLockEnabled ? 'true' : 'false'],
-            ['biometric_lock_enabled', s.biometricLockEnabled ? 'true' : 'false'],
-            ['onboarding_completed', s.onboardingCompleted ? 'true' : 'false'],
-            ['budget_alert_threshold_pct', String(s.budgetAlertThresholdPct)],
-            ['monthly_start_day', String(s.monthlyStartDay)],
-            ['notifications_enabled', s.notificationsEnabled ? 'true' : 'false'],
-          ];
-
-          if (s.defaultAccountId) {
-            settingsRows.push(['default_account_id', s.defaultAccountId]);
-          }
-
-          for (const [key, val] of settingsRows) {
+          for (const [key, val] of Object.entries(data.settings)) {
             await tx.execute(
               `INSERT INTO app_settings (key, value) VALUES (?, ?)
-               ON CONFLICT(key) DO UPDATE SET value = excluded.value`,
-              [key, val]
+               ON CONFLICT(key) DO UPDATE SET value = ?`,
+              [key, JSON.stringify(val), JSON.stringify(val)]
             );
           }
         }

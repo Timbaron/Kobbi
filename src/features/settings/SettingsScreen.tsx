@@ -21,7 +21,6 @@ import {
   Moon,
   Palette,
   Plus,
-  RotateCcw,
   Sun,
   Tag,
   Trash2,
@@ -88,9 +87,6 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
 
   // Brand Kit Sheet
   const [brandKitOpen, setBrandKitOpen] = useState(false);
-
-  // Reset Demo Modal
-  const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
 
   // PIN Setup / Verify Modal
   const [pinModalMode, setPinModalMode] = useState<'create' | 'verify' | null>(null);
@@ -182,17 +178,6 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
       onShowToast?.('Backup successfully restored!', 'success');
     } catch (err: any) {
       setImportError(err.message || 'Invalid or corrupted backup JSON.');
-    }
-  };
-
-  const handleResetDemoData = async () => {
-    try {
-      await seedInitialData(db.db, true);
-      await loadData();
-      setResetConfirmOpen(false);
-      onShowToast?.('Sample Naira ledger restored', 'info');
-    } catch {
-      onShowToast?.('Failed to reset demo data', 'error');
     }
   };
 
@@ -657,10 +642,9 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
               <ChevronRight size={18} color={colors.textSecondary} />
             </TouchableOpacity>
 
-            <View style={[styles.divider, { backgroundColor: colors.borderSubtle }]} />
-
             {onReplayOnboarding && (
               <>
+                <View style={[styles.divider, { backgroundColor: colors.borderSubtle }]} />
                 <TouchableOpacity
                   onPress={onReplayOnboarding}
                   style={styles.settingRowPressable}
@@ -670,22 +654,8 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                   </Text>
                   <ChevronRight size={18} color={colors.textSecondary} />
                 </TouchableOpacity>
-
-                <View style={[styles.divider, { backgroundColor: colors.borderSubtle }]} />
               </>
             )}
-
-            <TouchableOpacity
-              onPress={() => setResetConfirmOpen(true)}
-              style={styles.settingRowPressable}
-            >
-              <View style={styles.rowLeftIcon}>
-                <RotateCcw size={18} color={colors.semantic.expense} />
-                <Text style={[styles.settingLabel, { color: colors.semantic.expense, fontWeight: '700' }]}>
-                  Reset Demo Data
-                </Text>
-              </View>
-            </TouchableOpacity>
           </View>
         </View>
 
@@ -1025,18 +995,6 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
           </View>
         </View>
       </BottomSheet>
-
-      {/* Reset Confirmation Modal */}
-      <ConfirmationModal
-        visible={resetConfirmOpen}
-        title="Reset Demo Data?"
-        message="This will restore all accounts, transactions, budgets, goals, and recurring schedules to the approved Nigerian Naira dataset."
-        confirmLabel="Reset Data"
-        cancelLabel="Cancel"
-        isDestructive
-        onCancel={() => setResetConfirmOpen(false)}
-        onConfirm={handleResetDemoData}
-      />
 
       {/* PIN Lock Setup / Verification Modal */}
       <Modal

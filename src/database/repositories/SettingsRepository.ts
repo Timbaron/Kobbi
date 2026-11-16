@@ -1,6 +1,6 @@
 import { DatabaseConnection } from '../connection/DatabaseConnection';
 import { AppSettings, FinanceState } from '../../types/finance';
-import { DEFAULT_APP_SETTINGS, seedDemoLedger, seedInitialData } from '../seeds/defaultData';
+import { DEFAULT_APP_SETTINGS, seedInitialData } from '../seeds/defaultData';
 
 export class SettingsRepository {
   constructor(private db: DatabaseConnection) {}
@@ -33,34 +33,24 @@ export class SettingsRepository {
   }
 
   /**
-   * Complete database reset. Clears all financial ledger tables and restores initial seed.
+   * Complete database clear. Permanently deletes all financial ledger records.
    */
-  async resetData(includeDemoSeed = true): Promise<void> {
+  async clearAllData(): Promise<void> {
     const currentSettings = await this.getSettings();
 
     await this.db.transaction(async (tx) => {
-      await tx.executeRaw(`
-        DELETE FROM savings_goal_entries;
-        DELETE FROM savings_goals;
-        DELETE FROM budget_allocations;
-        DELETE FROM budgets;
-        DELETE FROM transactions;
-        DELETE FROM recurring_transactions;
-        DELETE FROM accounts;
-      `);
+      await tx.execute('DELETE FROM savings_goal_entries');
+      await tx.execute('DELETE FROM savings_goals');
+      await tx.execute('DELETE FROM budget_allocations');
+      await tx.execute('DELETE FROM budgets');
+      await tx.execute('DELETE FROM transactions');
+      await tx.execute('DELETE FROM recurring_transactions');
+      await tx.execute('DELETE FROM accounts');
 
-      if (includeDemoSeed) {
-        await seedDemoLedger(tx);
-        await tx.execute(
-          'UPDATE app_settings SET value = ? WHERE key = ?',
-          [JSON.stringify(true), 'onboardingCompleted']
-        );
-      } else {
-        await tx.execute(
-          'UPDATE app_settings SET value = ? WHERE key = ?',
-          [JSON.stringify(false), 'onboardingCompleted']
-        );
-      }
+      await tx.execute(
+        'UPDATE app_settings SET value = ? WHERE key = ?',
+        [JSON.stringify(false), 'onboardingCompleted']
+      );
 
       // Preserve user theme choice
       await tx.execute(

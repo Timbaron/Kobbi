@@ -45,45 +45,52 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }
   const db = DatabaseManager.getInstance();
 
   const [step, setStep] = useState<0 | 1 | 2 | 3>(0);
-  const [userName, setUserName] = useState<string>('Tunde');
+  const [userName, setUserName] = useState<string>('');
   const [currencyCode, setCurrencyCode] = useState<AppSettings['currencyCode']>('NGN');
   const [currencySymbol, setCurrencySymbol] = useState<string>('₦');
-  const [startingBalanceKobo, setStartingBalanceKobo] = useState<number>(315000 * 100);
-  const [monthlyIncomeKobo, setMonthlyIncomeKobo] = useState<number>(485000 * 100);
-  const [initialBudgetKobo, setInitialBudgetKobo] = useState<number>(280000 * 100);
+  const [startingBalanceKobo, setStartingBalanceKobo] = useState<number>(0);
+  const [monthlyIncomeKobo, setMonthlyIncomeKobo] = useState<number>(0);
+  const [initialBudgetKobo, setInitialBudgetKobo] = useState<number>(0);
 
-  const handleFinish = async (skipToDemo = false) => {
+  const handleFinish = async () => {
     try {
-      if (skipToDemo) {
-        await db.repos.settings.updateSettings({
-          userName: 'Tunde',
-          currencyCode: 'NGN',
-          currencySymbol: '₦',
-          onboardingCompleted: true,
-        });
-      } else {
-        await db.repos.settings.updateSettings({
-          userName: userName.trim() || 'Tunde',
-          currencyCode,
-          currencySymbol,
-          monthlyIncomeEstimateKobo: monthlyIncomeKobo,
-          onboardingCompleted: true,
-        });
+      const trimmedName = userName.trim() || 'User';
 
-        // Update GTBank account opening balance if starting balance was configured
-        const accounts = await db.repos.accounts.getAll(false);
-        const primaryAcc = accounts.find((a) => a.id === 'acc-gtb') || accounts[0];
-        if (primaryAcc) {
-          await db.repos.accounts.update(primaryAcc.id, {
+      // 1. Create primary wallet if no accounts exist
+      let primaryAccId = '';
+      const accounts = await db.repos.accounts.getAll(false);
+      if (accounts.length === 0) {
+        const newAcc = await db.repos.accounts.create({
+          name: 'Main Wallet',
+          institution: 'Cash / Bank',
+          type: 'bank',
+          openingBalanceKobo: startingBalanceKobo,
+          color: '#087F5B',
+        });
+        primaryAccId = newAcc.id;
+      } else {
+        primaryAccId = accounts[0].id;
+        if (startingBalanceKobo > 0) {
+          await db.repos.accounts.update(primaryAccId, {
             openingBalanceKobo: startingBalanceKobo,
           });
         }
+      }
 
-        // Set initial monthly budget if configured
-        if (initialBudgetKobo > 0) {
-          const currMonthKey = getCurrentMonthKey();
-          await db.repos.budgets.setTotalBudget(currMonthKey, initialBudgetKobo);
-        }
+      // 2. Save personalized settings
+      await db.repos.settings.updateSettings({
+        userName: trimmedName,
+        currencyCode,
+        currencySymbol,
+        defaultAccountId: primaryAccId,
+        monthlyIncomeEstimateKobo: monthlyIncomeKobo,
+        onboardingCompleted: true,
+      });
+
+      // 3. Set initial monthly budget if configured
+      if (initialBudgetKobo > 0) {
+        const currMonthKey = getCurrentMonthKey();
+        await db.repos.budgets.setTotalBudget(currMonthKey, initialBudgetKobo);
       }
 
       onComplete();
@@ -431,15 +438,6 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }
               <Text style={styles.primaryButtonText}>Get Started</Text>
               <ArrowRight size={17} color="#FFFFFF" />
             </TouchableOpacity>
-
-            <TouchableOpacity
-              onPress={() => handleFinish(true)}
-              style={styles.skipButton}
-            >
-              <Text style={[styles.skipButtonText, { color: colors.textSecondary }]}>
-                Skip setup & explore sample Naira ledger
-              </Text>
-            </TouchableOpacity>
           </View>
         )}
 
@@ -473,7 +471,7 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }
                 onPress={() => setStep(3)}
                 style={styles.skipStepButton}
               >
-                <Text style={[styles.skipButtonText, { color: colors.textSecondary }]}>
+                <Text style={[styles.skipStepButtonText, { color: colors.textSecondary }]}>
                   Skip this optional step
                 </Text>
               </TouchableOpacity>
@@ -483,7 +481,7 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }
 
         {step === 3 && (
           <TouchableOpacity
-            onPress={() => handleFinish(false)}
+            onPress={() => handleFinish()}
             style={[styles.primaryButton, { backgroundColor: colors.primary }]}
           >
             <Sparkles size={17} color="#FFFFFF" />
@@ -707,6 +705,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  skipStepButtonText: {
+    fontSize: DesignTokens.typography.sizes.caption,
+    fontWeight: '600',
+  },
   primaryButton: {
     minHeight: DesignTokens.touchTargets.primaryButtonHeight,
     borderRadius: DesignTokens.radii.md,
@@ -719,14 +721,5 @@ const styles = StyleSheet.create({
     fontSize: DesignTokens.typography.sizes.body,
     fontWeight: '700',
     color: '#FFFFFF',
-  },
-  skipButton: {
-    minHeight: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  skipButtonText: {
-    fontSize: DesignTokens.typography.sizes.caption,
-    fontWeight: '600',
   },
 });

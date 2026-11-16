@@ -21,7 +21,7 @@ export const DEFAULT_CATEGORIES: Category[] = [
 ];
 
 export const DEFAULT_APP_SETTINGS: AppSettings = {
-  userName: 'Tunde',
+  userName: '',
   currencyCode: 'NGN',
   currencySymbol: '₦',
   theme: 'light',
@@ -29,12 +29,12 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   notificationsEnabled: true,
   budgetAlertThresholdPct: 80,
   monthlyStartDay: 1,
-  defaultAccountId: 'acc-opay',
+  defaultAccountId: '',
   hideBalances: false,
   appLockEnabled: false,
   biometricLockEnabled: false,
   onboardingCompleted: false,
-  monthlyIncomeEstimateKobo: 485000 * 100,
+  monthlyIncomeEstimateKobo: 0,
 };
 
 const naira = (amount: number) => Math.round(amount * 100);
@@ -54,6 +54,32 @@ function isoDaysFromNow(ref: Date, daysAhead: number): string {
 function isoMonthDay(monthKey: string, day: number, time = '09:15'): string {
   const dd = String(Math.min(28, Math.max(1, day))).padStart(2, '0');
   return `${monthKey}-${dd}T${time}:00`;
+}
+
+export async function purgeDemoDataIfPresent(db: DatabaseConnection): Promise<void> {
+  const demoAccounts = await db.execute(
+    "SELECT id FROM accounts WHERE id IN ('acc-gtb', 'acc-opay', 'acc-uba', 'acc-cash', 'acc-palmpay')"
+  );
+  if (demoAccounts.rows.length > 0) {
+    await db.transaction(async (tx) => {
+      await tx.execute("DELETE FROM savings_goal_entries WHERE goal_id LIKE 'goal-%'");
+      await tx.execute("DELETE FROM savings_goals WHERE id LIKE 'goal-%'");
+      await tx.execute("DELETE FROM budget_allocations");
+      await tx.execute("DELETE FROM budgets");
+      await tx.execute("DELETE FROM transactions WHERE id LIKE 'tx-%'");
+      await tx.execute("DELETE FROM recurring_transactions WHERE id LIKE 'rec-%'");
+      await tx.execute("DELETE FROM accounts WHERE id IN ('acc-gtb', 'acc-opay', 'acc-uba', 'acc-cash', 'acc-palmpay')");
+
+      // Reset onboarding settings if user name was default demo 'Tunde'
+      const nameRes = await tx.execute("SELECT value FROM app_settings WHERE key = 'userName'");
+      if (nameRes.rows.length > 0 && String(nameRes.rows[0].value).includes('Tunde')) {
+        await tx.execute("UPDATE app_settings SET value = ? WHERE key = 'userName'", [JSON.stringify('')]);
+        await tx.execute("UPDATE app_settings SET value = ? WHERE key = 'onboardingCompleted'", [JSON.stringify(false)]);
+        await tx.execute("UPDATE app_settings SET value = ? WHERE key = 'defaultAccountId'", [JSON.stringify('')]);
+        await tx.execute("UPDATE app_settings SET value = ? WHERE key = 'monthlyIncomeEstimateKobo'", [JSON.stringify(0)]);
+      }
+    });
+  }
 }
 
 export async function seedInitialData(
@@ -86,7 +112,12 @@ export async function seedInitialData(
     }
   }
 
-  // 3. Seed Demo Data if requested
+  // 3. Clear any existing demo data if present from earlier runs (production)
+  if (!includeDemoLedger) {
+    await purgeDemoDataIfPresent(db);
+  }
+
+  // 4. Seed Demo Data only if explicitly requested (e.g. in test suites)
   if (includeDemoLedger) {
     const accCountRes = await db.execute('SELECT COUNT(*) as count FROM accounts');
     if (accCountRes.rows[0]?.count === 0) {
@@ -103,6 +134,12 @@ export async function seedDemoLedger(db: DatabaseConnection): Promise<void> {
   const threeMonthsAgo = shiftMonthKey(currMonth, -3);
 
   await db.transaction(async (tx) => {
+    // Seed demo settings
+    await tx.execute("UPDATE app_settings SET value = ? WHERE key = 'userName'", [JSON.stringify('Tunde')]);
+    await tx.execute("UPDATE app_settings SET value = ? WHERE key = 'defaultAccountId'", [JSON.stringify('acc-gtb')]);
+    await tx.execute("UPDATE app_settings SET value = ? WHERE key = 'monthlyIncomeEstimateKobo'", [JSON.stringify(48500000)]);
+    await tx.execute("UPDATE app_settings SET value = ? WHERE key = 'onboardingCompleted'", [JSON.stringify(true)]);
+
     // Accounts
     const accounts = [
       { id: 'acc-gtb', name: 'GTBank Savings', institution: 'GTBank', type: 'bank', bal: naira(315000), color: '#C2410C' },

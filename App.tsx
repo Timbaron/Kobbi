@@ -72,7 +72,7 @@ function KobbiMainApp() {
     let mounted = true;
     async function bootstrap() {
       try {
-        await db.initialize(true);
+        await db.initialize(false);
         const currentSettings = await db.repos.settings.getSettings();
         if (mounted) {
           setSettings(currentSettings);

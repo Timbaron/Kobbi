@@ -15,6 +15,8 @@ import {
   ChevronRight,
   Lightbulb,
   PieChart,
+  Receipt,
+  Wallet,
 } from 'lucide-react-native';
 import { DesignTokens } from '../../theme/tokens';
 import { useTheme } from '../../theme/ThemeContext';
@@ -295,29 +297,60 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
             style={styles.manageLink}
           >
             <Text style={[styles.manageLinkText, { color: colors.primary }]}>
-              Manage ({accounts.length})
+              {accounts.length > 0 ? `Manage (${accounts.length})` : 'Add Account'}
             </Text>
             <ChevronRight size={14} color={colors.primary} />
           </Pressable>
         </View>
 
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.accountsStrip}
-        >
-          {accounts.map((acc) => (
-            <AccountCard
-              key={acc.id}
-              account={acc}
-              balanceKobo={accountBalances[acc.id] || 0}
-              currencySymbol={settings?.currencySymbol}
-              hideBalances={settings?.hideBalances}
-              compact
-              onClick={() => onOpenSecondary('accounts')}
-            />
-          ))}
-        </ScrollView>
+        {accounts.length > 0 ? (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.accountsStrip}
+          >
+            {accounts.map((acc) => (
+              <AccountCard
+                key={acc.id}
+                account={acc}
+                balanceKobo={accountBalances[acc.id] || 0}
+                currencySymbol={settings?.currencySymbol}
+                hideBalances={settings?.hideBalances}
+                compact
+                onClick={() => onOpenSecondary('accounts')}
+              />
+            ))}
+          </ScrollView>
+        ) : (
+          <Pressable
+            onPress={() => onOpenSecondary('accounts')}
+            style={[
+              styles.emptyAccountCard,
+              {
+                backgroundColor: colors.surface,
+                borderColor: colors.borderSubtle,
+              },
+            ]}
+          >
+            <View
+              style={[
+                styles.emptyIconCircle,
+                { backgroundColor: isDark ? colors.surfaceSubtle : '#F1F5F9' },
+              ]}
+            >
+              <Wallet size={20} color={colors.primary} />
+            </View>
+            <View style={styles.emptyAccountTextWrap}>
+              <Text style={[styles.emptyAccountTitle, { color: colors.textPrimary }]}>
+                Add your first account
+              </Text>
+              <Text style={[styles.emptyAccountSubtitle, { color: colors.textSecondary }]}>
+                Track balances for bank accounts, cash, or mobile wallets
+              </Text>
+            </View>
+            <ChevronRight size={18} color={colors.textSecondary} />
+          </Pressable>
+        )}
 
         {/* Monthly Budget Overview */}
         <View style={[styles.sectionHeaderRow, { marginTop: DesignTokens.spacing.lg }]}>
@@ -559,20 +592,53 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
           </Pressable>
         </View>
 
-        <View style={styles.recentList}>
-          {recentTransactions.map((tx) => (
-            <TransactionItem
-              key={tx.id}
-              transaction={tx}
-              category={categories.find((c) => c.id === tx.categoryId)}
-              account={accounts.find((a) => a.id === tx.accountId)}
-              destinationAccount={accounts.find((a) => a.id === tx.destinationAccountId)}
-              currencySymbol={settings?.currencySymbol}
-              hideBalances={settings?.hideBalances}
-              onPress={() => onNavigateTab('transactions')}
-            />
-          ))}
-        </View>
+        {recentTransactions.length > 0 ? (
+          <View style={styles.recentList}>
+            {recentTransactions.map((tx) => (
+              <TransactionItem
+                key={tx.id}
+                transaction={tx}
+                category={categories.find((c) => c.id === tx.categoryId)}
+                account={accounts.find((a) => a.id === tx.accountId)}
+                destinationAccount={accounts.find((a) => a.id === tx.destinationAccountId)}
+                currencySymbol={settings?.currencySymbol}
+                hideBalances={settings?.hideBalances}
+                onPress={() => onNavigateTab('transactions')}
+              />
+            ))}
+          </View>
+        ) : (
+          <View
+            style={[
+              styles.emptyRecentCard,
+              {
+                backgroundColor: colors.surface,
+                borderColor: colors.borderSubtle,
+              },
+            ]}
+          >
+            <View
+              style={[
+                styles.emptyIconCircle,
+                { backgroundColor: isDark ? colors.surfaceSubtle : '#F1F5F9' },
+              ]}
+            >
+              <Receipt size={22} color={colors.textSecondary} />
+            </View>
+            <Text style={[styles.emptyRecentTitle, { color: colors.textPrimary }]}>
+              No transactions recorded yet
+            </Text>
+            <Text style={[styles.emptyRecentSubtitle, { color: colors.textSecondary }]}>
+              Log your expenses, income, or transfers to start tracking your cash flow.
+            </Text>
+            <Pressable
+              onPress={() => onOpenTransactionForm('expense')}
+              style={[styles.emptyAddButton, { backgroundColor: colors.primary }]}
+            >
+              <Text style={styles.emptyAddButtonText}>+ Add Transaction</Text>
+            </Pressable>
+          </View>
+        )}
       </ScrollView>
 
       {/* Reminders & Alerts Bottom Sheet */}
@@ -872,5 +938,63 @@ const styles = StyleSheet.create({
     fontSize: 13,
     textAlign: 'center',
     paddingVertical: 20,
+  },
+  emptyAccountCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 14,
+    borderRadius: DesignTokens.radii.xl,
+    borderWidth: 1,
+    gap: 12,
+  },
+  emptyAccountTextWrap: {
+    flex: 1,
+  },
+  emptyAccountTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    marginBottom: 2,
+  },
+  emptyAccountSubtitle: {
+    fontSize: 12,
+    lineHeight: 16,
+  },
+  emptyIconCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyRecentCard: {
+    padding: 24,
+    borderRadius: DesignTokens.radii.xl,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyRecentTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    marginTop: 10,
+    marginBottom: 4,
+    textAlign: 'center',
+  },
+  emptyRecentSubtitle: {
+    fontSize: 12,
+    lineHeight: 18,
+    textAlign: 'center',
+    maxWidth: 280,
+    marginBottom: 14,
+  },
+  emptyAddButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: DesignTokens.radii.md,
+  },
+  emptyAddButtonText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
 });
