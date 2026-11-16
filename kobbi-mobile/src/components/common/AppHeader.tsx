@@ -14,6 +14,7 @@ interface AppHeaderProps {
   alertCount?: number;
   onOpenNotifications?: () => void;
   onOpenSettings?: () => void;
+  rightAction?: React.ReactNode;
 }
 
 export const AppHeader: React.FC<AppHeaderProps> = ({
@@ -25,6 +26,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
   alertCount = 0,
   onOpenNotifications,
   onOpenSettings,
+  rightAction,
 }) => {
   const { colors, isDark } = useTheme();
 
@@ -75,6 +77,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
       </View>
 
       <View style={styles.rightContainer}>
+        {rightAction}
         {onOpenNotifications && (
           <Pressable
             onPress={onOpenNotifications}
